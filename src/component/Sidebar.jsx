@@ -13,7 +13,7 @@ const Sidebar = () => {
         { path: '/client', icon: <FaHospitalUser />, label: 'Client' },
         { path: '/service-type', icon: <MdOutlineHomeRepairService />, label: 'Service Type' },
         { path: '/locations', icon: <FaMapLocationDot />, label: 'Locations' },
-        { path: '/marketing', icon: <FaUsersGear />, label: 'Marketing' },
+        { path: '/users', icon: <FaUsersGear />, label: 'Users' },
         { path: '/consultant', icon: <FaUsers />, label: 'Consultant' },
     ];
 

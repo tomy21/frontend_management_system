@@ -12,7 +12,7 @@ const Layout = () => {
 
   return (
     <>
-      <div className="flex h-screen bg-white">
+      <div className="flex h-screen bg-white w-full">
         <Sidebar />
         <div className="flex flex-col flex-1 p-4 ml-60 w-full max-h-screen overflow-auto justify-start items-start">
           <Navbar />

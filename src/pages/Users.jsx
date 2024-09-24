@@ -1,9 +1,11 @@
 import React from 'react'
+import TabUsers from '../component/TabsUsers'
 
 export default function Users() {
   return (
-    <div>
-      <h1 className="text-3xl font-bold">Users</h1>
+    <div className='w-full'>
+      <h1 className="text-xl font-bold">Users</h1>
+      <TabUsers />
     </div>
   )
 }

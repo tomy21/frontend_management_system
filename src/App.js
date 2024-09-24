@@ -9,6 +9,7 @@ import Marketing from './pages/Marketing';
 import Location from './pages/Location';
 import ServiceType from './pages/ServiceType';
 import ServiceOrders from './pages/ServiceOrders';
+import Users from './pages/Users';
 
 function App() {
   return (
@@ -30,8 +31,8 @@ function App() {
         <Route path="consultant" element={<Layout />}>
           <Route index element={<Consultant />} />
         </Route>
-        <Route path="marketing" element={<Layout />}>
-          <Route index element={<Marketing />} />
+        <Route path="users" element={<Layout />}>
+          <Route index element={<Users />} />
         </Route>
         <Route path="locations" element={<Layout />}>
           <Route index element={<Location />} />

@@ -7,13 +7,14 @@ import { MdNotes } from 'react-icons/md';
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
 import { useNavigate } from 'react-router-dom';
-import { getUserById } from '../Utils/ApiUsers';
+import { getUserById, Users } from '../Utils/ApiUsers';
 
 export default function Navbar() {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [idUser, setIdUser] = useState(null);
     const [name, setName] = useState(" ");
     const [role, setRole] = useState(null);
+    const [initial, setInitial] = useState(null);
     const navigate = useNavigate();
 
     const toggleDropdown = () => {
@@ -34,19 +35,23 @@ export default function Navbar() {
         fetchToken();
     }, [navigate]);
 
+
+
     useEffect(() => {
         const fetchUser = async () => {
-          setTimeout(async () => {
-            if (idUser) {
-              const response = await getUserById.getById(idUser);
-              setName(response.data.user.name);
-              setRole(response.data.user.role);
-            }
-          }, 500);
+            setTimeout(async () => {
+                if (idUser) {
+                    const response = await Users.getById(idUser);
+                    console.log(response)
+                    setName(response.data.user.UserName);
+                    setRole(response.data.user.Role);
+                    setInitial(response.data.user.Initial);
+                }
+            }, 500);
         };
-    
+
         fetchUser();
-      }, [idUser]);
+    }, [idUser]);
 
     return (
         <>
@@ -58,9 +63,14 @@ export default function Navbar() {
                     <div className="flex lg:flex-1">
                         <MdNotes size={30} />
                     </div>
-                    <div className="flex flex-col justify-end items-end">
-                        <h1 className="text-xs font-semibold">{name}</h1>
-                        <p className="text-xs font-light">{role}</p>
+                    <div className="flex flex-row justify-center items-center space-x-2">
+                        <div className="flex flex-col justify-end items-end">
+                            <h1 className="text-xs font-semibold">{name}</h1>
+                            <p className="text-xs font-light">{role}</p>
+                        </div>
+                        <div className="flex justify-center items-center p-2 rounded-full bg-red-100">
+                            {initial}
+                        </div>
                     </div>
                 </nav>
             </header>
