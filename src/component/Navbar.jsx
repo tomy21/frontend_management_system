@@ -21,33 +21,15 @@ export default function Navbar() {
         setDropdownOpen(!dropdownOpen);
     };
 
-    useEffect(() => {
-        const fetchToken = async () => {
-            const token = Cookies.get("refreshToken");
-            if (!token) {
-                navigate("/");
-            }
-            if (token) {
-                const decodedToken = jwtDecode(token);
-                setIdUser(decodedToken.Id);
-            }
-        };
-        fetchToken();
-    }, [navigate]);
-
 
 
     useEffect(() => {
         const fetchUser = async () => {
-            setTimeout(async () => {
-                if (idUser) {
-                    const response = await Users.getById(idUser);
-                    console.log(response)
-                    setName(response.data.user.UserName);
-                    setRole(response.data.user.Role);
-                    setInitial(response.data.user.Initial);
-                }
-            }, 500);
+            const response = await Users.getById();
+            setName(response.data.user.UserName);
+            setRole(response.data.user.Role);
+            setInitial(response.data.user.Initial);
+
         };
 
         fetchUser();

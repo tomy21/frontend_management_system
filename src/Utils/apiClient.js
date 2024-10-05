@@ -1,9 +1,10 @@
-import axios from "axios";
+import axios from 'axios'
 
 export const apiClient = axios.create({
-  baseURL: "http://localhost:3008",
+  baseURL:
+    'https://service-management-system-2buj63496-tomy21s-projects.vercel.app',
   withCredentials: true,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
-});
+})

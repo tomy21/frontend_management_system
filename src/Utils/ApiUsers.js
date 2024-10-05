@@ -10,11 +10,29 @@ export const login = {
       throw error.response.data
     }
   },
+
+  logoutPost: async () => {
+    try {
+      const response = await apiClient.post('/api/auth/logout')
+      return response.data
+    } catch (error) {
+      throw error.response.data
+    }
+  },
 }
 export const Users = {
   addUsers: async (formData) => {
     try {
       const response = await apiClient.post(`/api/users`, formData)
+      return response.data
+    } catch (error) {
+      throw error.response.data
+    }
+  },
+
+  verifyToken: async () => {
+    try {
+      const response = await apiClient.get('/api/auth/verifyToken')
       return response.data
     } catch (error) {
       throw error.response.data
@@ -45,9 +63,9 @@ export const Users = {
     }
   },
 
-  getById: async (id) => {
+  getById: async () => {
     try {
-      const response = await apiClient.get(`/api/auth/getUsers/${id}`)
+      const response = await apiClient.get(`/api/auth/getUsersById`)
       console.log('response', response.data)
       return response.data
     } catch (error) {
@@ -67,6 +85,41 @@ export const Users = {
   deleteUsers: async (id) => {
     try {
       const response = await apiClient.delete(`/api/users/${id}`)
+      return response.data
+    } catch (error) {
+      throw error.response.data
+    }
+  },
+}
+export const Attendance = {
+  getAttendance: async () => {
+    try {
+      const response = await apiClient.get(`/api/attendance/byIdUser`)
+      return response.data
+    } catch (error) {
+      throw error.response.data
+    }
+  },
+  checkIn: async (Longitude, Latitude, InDate) => {
+    try {
+      const response = await apiClient.post(`/api/attendance`, {
+        Longitude,
+        Latitude,
+        InDate,
+        CreatedBy: 'system',
+      })
+      return response.data
+    } catch (error) {
+      throw error.response.data
+    }
+  },
+
+  checkOut: async (id) => {
+    try {
+      const response = await apiClient.post(`/api/attendance/checkout/${id}`, {
+        Status: 'Check Out',
+        CreatedBy: 'system',
+      })
       return response.data
     } catch (error) {
       throw error.response.data

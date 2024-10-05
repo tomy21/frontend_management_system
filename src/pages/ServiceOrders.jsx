@@ -151,6 +151,7 @@ export default function ServiceOrders() {
   };
   const handleCloseModalRelease = () => {
     setShowModalRelease(false);
+    fetchData()
   };
 
   return (

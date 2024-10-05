@@ -8,6 +8,7 @@ export default function DetailServiceOrder({ showModalDetail, setShowModalDetail
     const [errors, setErrors] = useState({});
     const [apiError, setApiError] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showErrorModal, setShowErrorModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const [dataService, setDataService] = useState([]);
     const navigate = useNavigate();
@@ -100,9 +101,9 @@ export default function DetailServiceOrder({ showModalDetail, setShowModalDetail
                                 {dataService?.Consultants?.map((items, index) => (
                                     <tr key={index}>
                                         <td className='py-3 px-3'>{index + 1}</td>
-                                        <td className='py-3 px-3'>{items.ConsultanUser ?? "-"}</td>
-                                        <td className='py-3 px-3'>{items.Date}</td>
-                                        <td className='py-3 px-3'>{items.Status}</td>
+                                        <td className='py-3 px-3'>{items?.ConsultantUser?.UserName ?? "-"}</td>
+                                        <td className='py-3 px-3'>{items?.Date}</td>
+                                        <td className='py-3 px-3'>{items?.Status}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -133,7 +134,7 @@ export default function DetailServiceOrder({ showModalDetail, setShowModalDetail
                         </div>
                     </div>
                 )}
-                {apiError && (
+                {showErrorModal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg w-80 p-6 flex flex-col items-center justify-center space-y-4">
                             <AiOutlineCheckCircle className="text-green-500" size={50} />

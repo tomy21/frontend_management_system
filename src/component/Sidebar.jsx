@@ -1,21 +1,36 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaUsers, FaHospitalUser } from 'react-icons/fa';
 import { MdDashboard, MdOutlineHomeRepairService, MdOutlineTask } from "react-icons/md";
 import { FaMapLocationDot, FaUsersGear } from 'react-icons/fa6';
+import { VscSignOut } from "react-icons/vsc";
+import { login } from '../Utils/ApiUsers';
 
 const Sidebar = () => {
     const location = useLocation();
+    const navigate = useNavigate();
 
     const menuItems = [
-        { path: '/dashboard', icon: <MdDashboard />, label: 'Dashboard' },
-        { path: '/service-orders', icon: <MdOutlineTask />, label: 'Service Orders' },
-        { path: '/client', icon: <FaHospitalUser />, label: 'Client' },
-        { path: '/service-type', icon: <MdOutlineHomeRepairService />, label: 'Service Type' },
-        { path: '/locations', icon: <FaMapLocationDot />, label: 'Locations' },
-        { path: '/users', icon: <FaUsersGear />, label: 'Users' },
-        { path: '/consultant', icon: <FaUsers />, label: 'Consultant' },
+        // { path: '/dashboard', icon: <MdDashboard />, label: 'Dashboard' },
+        { path: '/dashboard/user', icon: <MdDashboard />, label: 'Dashboard ' },
+        { path: '/dashboard/service-orders', icon: <MdOutlineTask />, label: 'Service Orders' },
+        { path: '/dashboard/client', icon: <FaHospitalUser />, label: 'Client' },
+        { path: '/dashboard/service-type', icon: <MdOutlineHomeRepairService />, label: 'Service Type' },
+        { path: '/dashboard/locations', icon: <FaMapLocationDot />, label: 'Locations' },
+        { path: '/dashboard/users', icon: <FaUsersGear />, label: 'Users' },
+        { path: '/dashboard/consultant', icon: <FaUsers />, label: 'Consultant' },
     ];
+
+    const handleLogout = async () => {
+        try {
+            const response = await login.logoutPost();
+            if (response.status === 200) {
+                navigate('/');
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
 
     return (
         <div className="fixed h-screen w-60 text-[#333] border-r border-slate-200 bg-white">
@@ -33,7 +48,8 @@ const Sidebar = () => {
                                     <li key={path}>
                                         <Link
                                             to={path}
-                                            className={`flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-slate-400 ${location.pathname === path ? 'bg-slate-400 text-white' : ''}`}
+                                            className={`flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-slate-400 ${location.pathname === path ? 'bg-slate-400 text-white' : ''
+                                                }`}
                                         >
                                             {icon}
                                             <span>{label}</span>
@@ -43,6 +59,11 @@ const Sidebar = () => {
                         </ul>
                     </div>
                 ))}
+                <div className="fixed bottom-5 p-4">
+                    <button onClick={handleLogout} className='flex flex-row justify-start items-center gap-x-3'>
+                        <VscSignOut /> Logout
+                    </button>
+                </div>
             </div>
         </div>
     );

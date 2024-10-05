@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AiOutlineCheckCircle } from 'react-icons/ai';
+import { AiOutlineCheckCircle, AiOutlineCloseCircle } from 'react-icons/ai';
 import Loading from '../Loading'; // Komponen loading
 import { clientData, serviceOrders, serviceType } from '../../Utils/apiManageClient';
 import { Users } from '../../Utils/ApiUsers';
@@ -7,6 +7,8 @@ import { Users } from '../../Utils/ApiUsers';
 export default function AddConsultan({ showModalRelease, setShowModalRelease, serviceId }) {
     const [apiError, setApiError] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showErrorModal, setShowErrorsModal] = useState(false);
+    const [message, setMessage] = useState(false);
     const [loading, setLoading] = useState(false);
     const [dataService, setDataService] = useState([]);
     const [limit, setLimit] = useState(5);
@@ -17,15 +19,6 @@ export default function AddConsultan({ showModalRelease, setShowModalRelease, se
 
     // Fetch data for service order and consultants
     useEffect(() => {
-        const fetchdata = async () => {
-            try {
-                const response = await serviceOrders.getById(serviceId);
-                setDataService(response);
-            } catch (error) {
-                console.log(error);
-            }
-        };
-
         const getConsultant = async () => {
             try {
                 const response = await Users.getUsers(page, limit, role, search);
@@ -39,6 +32,16 @@ export default function AddConsultan({ showModalRelease, setShowModalRelease, se
         getConsultant();
     }, [serviceId, page, limit, role, search]);
 
+    const fetchdata = async () => {
+        try {
+            const response = await serviceOrders.getByOrderId(serviceId);
+            console.log(response)
+            setDataService(response);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     // Handle consultant change
     const handleConsultantChange = async (consultantId, itemId) => {
         try {
@@ -46,19 +49,66 @@ export default function AddConsultan({ showModalRelease, setShowModalRelease, se
             const formData = {
                 ConsultantId: consultantId,
             };
-            console.log(consultantId)
-            const response = await serviceOrders.updateDataConsultant(itemId, formData); // itemId adalah ID dari `ServiceOrderConsultant`
-            console.log(response)
-            setShowSuccessModal(true);
-            // Reload the service data after successful update
-            const updatedData = await serviceOrders.getById(serviceId);
-            setDataService(updatedData);
 
+            await serviceOrders.updateDataConsultant(itemId, formData);
+            setMessage("Add consultant successfully")
+            setShowSuccessModal(true);
             setTimeout(() => {
                 setShowSuccessModal(false);
-            }, 2000);
+                setMessage('');
+            }, 1000);
+            fetchdata();
         } catch (error) {
-            setApiError('Failed to update consultant');
+
+            setMessage('Failed to update consultant');
+            setShowErrorsModal(true)
+            setTimeout(() => {
+                setShowErrorsModal(false);
+            }, 1000);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Handle release service order
+    const handleRelease = async () => {
+        try {
+            setLoading(true);
+
+            // Check if all consultants have been selected
+            const allConsultantsSelected = dataService.data.every(item => !!item.ConsultantId);
+
+            if (!allConsultantsSelected) {
+                setMessage('All consultants must be selected before releasing the order.');
+                setShowErrorsModal(true)
+                setTimeout(() => {
+                    setShowErrorsModal(false);
+                }, 1000);
+                return; // Stop the process if not all consultants are selected
+            }
+
+            // Proceed with updating status to "Release"
+            const formDataServiceOrder = {
+                Status: "Release",
+            };
+
+            const updatedData = await serviceOrders.updateServiceOrder(serviceId, formDataServiceOrder);
+            setDataService(updatedData);
+            setMessage("Service order update successfully")
+            setShowSuccessModal(true);
+            setTimeout(() => {
+                setShowSuccessModal(false);
+                setShowModalRelease(false);
+                setMessage('');
+            }, 1000);
+            fetchdata();
+        } catch (error) {
+            setMessage('Failed to release service order');
+            setShowErrorsModal(true)
+            setTimeout(() => {
+                setShowErrorsModal(false);
+                setMessage('');
+            }, 1000);
         } finally {
             setLoading(false);
         }
@@ -67,7 +117,7 @@ export default function AddConsultan({ showModalRelease, setShowModalRelease, se
     if (!showModalRelease) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
             {loading ? (
                 <Loading />
             ) : (
@@ -84,18 +134,21 @@ export default function AddConsultan({ showModalRelease, setShowModalRelease, se
                             </tr>
                         </thead>
                         <tbody>
-                            {dataService?.Consultants?.map((items, index) => (
+                            {dataService?.data?.map((items, index) => (
                                 <tr key={index}>
                                     <td className='py-3 px-3'>{index + 1}</td>
                                     <td className='py-3 px-3'>
                                         <select
                                             className='w-full p-1 rounded-md'
-                                            value={items.ConsultanUser || ""}
-                                            onChange={(e) => handleConsultantChange(e.target.value, items.Id)} // Calls the update on consultant change
+                                            value={items.ConsultantId || ""} // Menggunakan ConsultantId sebagai value
+                                            onChange={(e) => handleConsultantChange(e.target.value, items.Id)} // Memperbarui konsultan jika ada perubahan
                                         >
                                             <option value="">Select Consultant</option>
+                                            {/* Looping untuk list consultant */}
                                             {listConsultant.map((data, index) => (
-                                                <option key={index} value={data.Id}>{data.UserName}</option>
+                                                <option key={index} value={data.Id}>
+                                                    {data.UserName}
+                                                </option>
                                             ))}
                                         </select>
                                     </td>
@@ -116,6 +169,13 @@ export default function AddConsultan({ showModalRelease, setShowModalRelease, se
                         >
                             Cancel
                         </button>
+                        <button
+                            type="button"
+                            className="px-4 py-2 bg-emerald-300 rounded-md hover:bg-emerald-400"
+                            onClick={handleRelease} // Now using handleRelease function for the button
+                        >
+                            Release
+                        </button>
                     </div>
                 </div>
             )}
@@ -126,16 +186,16 @@ export default function AddConsultan({ showModalRelease, setShowModalRelease, se
                     <div className="bg-white rounded-lg w-80 p-6 flex flex-col items-center justify-center space-y-4">
                         <AiOutlineCheckCircle className="text-green-500" size={50} />
                         <h3 className="text-xl font-bold">Success!</h3>
-                        <p className="text-gray-700">Consultant updated successfully</p>
+                        <p className="text-gray-700">{message}</p>
                     </div>
                 </div>
             )}
-            {apiError && (
+            {showErrorModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg w-80 p-6 flex flex-col items-center justify-center space-y-4">
-                        <AiOutlineCheckCircle className="text-green-500" size={50} />
+                        <AiOutlineCloseCircle className="text-red-500" size={50} />
                         <h3 className="text-xl font-bold">Error!</h3>
-                        <p className="text-gray-700">{apiError}</p>
+                        <p className="text-gray-700 text-center">{message}</p>
                     </div>
                 </div>
             )}

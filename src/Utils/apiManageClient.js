@@ -160,6 +160,28 @@ export const serviceOrders = {
     }
   },
 
+  getByOrderId: async (id) => {
+    try {
+      const response = await apiClient.get(
+        `/api/service-order-consultant/get/${id}`,
+      )
+      return response
+    } catch (error) {
+      throw error.response ? error.response.data : error
+    }
+  },
+
+  getByConsultantId: async () => {
+    try {
+      const response = await apiClient.get(
+        `/api/service-order-consultant/getByConsultant`,
+      )
+      return response.data
+    } catch (error) {
+      throw error.response ? error.response.data : error
+    }
+  },
+
   postData: async (formData) => {
     try {
       const response = await apiClient.post('/api/serviceOrder/add', formData)
@@ -174,6 +196,18 @@ export const serviceOrders = {
     try {
       const response = await apiClient.put(
         `/api/service-order-consultant/update-data/${id}`,
+        data,
+      )
+      return response.data
+    } catch (error) {
+      throw error.response ? error.response.data : error
+    }
+  },
+
+  updateServiceOrder: async (id, data) => {
+    try {
+      const response = await apiClient.put(
+        `/api/serviceOrder/update/${id}`,
         data,
       )
       return response.data

@@ -151,11 +151,10 @@ export default function AddServiceOrders({ showModal, setShowModal }) {
             CreatedBy: name,
             Contact: dataClientById.Email,
             ServiceType: dataServiceById.TypeName,
-            ManDays: [
-                {
-                    dates: dates.map(date => date.format('YYYY-MM-DD'))
-                }
-            ],
+            ManDays:
+            {
+                dates: dates.map(date => date.format('YYYY-MM-DD'))
+            },
         };
 
 
@@ -386,7 +385,7 @@ export default function AddServiceOrders({ showModal, setShowModal }) {
             {apiError && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg w-80 p-6 flex flex-col items-center justify-center space-y-4">
-                        <AiOutlineCheckCircle className="text-green-500" size={50} />
+                        <AiOutlineCheckCircle className="text-red-500" size={50} />
                         <h3 className="text-xl font-bold">Error!</h3>
                         <p className="text-gray-700">User added failed</p>
                     </div>
