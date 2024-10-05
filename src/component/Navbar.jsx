@@ -1,27 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { FaBell } from 'react-icons/fa';
-import { GiHamburgerMenu } from 'react-icons/gi';
-import { GoGear } from 'react-icons/go';
-import { BsChevronDown } from 'react-icons/bs';
 import { MdNotes } from 'react-icons/md';
-import { jwtDecode } from "jwt-decode";
-import Cookies from "js-cookie";
-import { useNavigate } from 'react-router-dom';
-import { getUserById, Users } from '../Utils/ApiUsers';
+import Users from '../pages/Users';
 
 export default function Navbar() {
     const [dropdownOpen, setDropdownOpen] = useState(false);
-    const [idUser, setIdUser] = useState(null);
     const [name, setName] = useState(" ");
     const [role, setRole] = useState(null);
     const [initial, setInitial] = useState(null);
-    const navigate = useNavigate();
 
     const toggleDropdown = () => {
         setDropdownOpen(!dropdownOpen);
     };
-
-
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -33,7 +22,7 @@ export default function Navbar() {
         };
 
         fetchUser();
-    }, [idUser]);
+    }, []);
 
     return (
         <>
