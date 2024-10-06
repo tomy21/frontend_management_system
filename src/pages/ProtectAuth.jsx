@@ -11,7 +11,7 @@ export default function ProtectAuth({ children }) {
         const checkAuth = async () => {
             try {
                 const response = await Users.verifyToken();
-
+                console.log(response);
                 if (response.statusCode === 200) {
                     setIsAuthenticated(true);
                 } else {
