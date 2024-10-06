@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MdNotes } from 'react-icons/md';
-import Users from '../pages/Users';
+import { Users } from '../Utils/ApiUsers';
 
 export default function Navbar() {
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -15,6 +15,7 @@ export default function Navbar() {
     useEffect(() => {
         const fetchUser = async () => {
             const response = await Users.getById();
+            console.log(response)
             setName(response.data.user.UserName);
             setRole(response.data.user.Role);
             setInitial(response.data.user.Initial);
