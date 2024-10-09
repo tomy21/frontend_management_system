@@ -47,10 +47,10 @@ const Formlogin = () => {
 
                 setTimeout(() => {
                     setLoading(false);
-                    navigation('/dashboard');
+                    navigation('/dashboard/users');
                 }, 2000);
 
-                
+
             } catch (error) {
                 setLoading(false);
                 toast.error(error.message || "Login failed", {

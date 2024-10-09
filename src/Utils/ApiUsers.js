@@ -20,6 +20,7 @@ export const login = {
     }
   },
 }
+
 export const Users = {
   addUsers: async (formData) => {
     try {
@@ -91,11 +92,12 @@ export const Users = {
     }
   },
 }
-export const Attendance = {
+
+export const AttendanceUsers = {
   getAttendance: async () => {
     try {
       const response = await apiClient.get(`/api/attendance/byIdUser`)
-      return response.data
+      return response
     } catch (error) {
       throw error.response.data
     }

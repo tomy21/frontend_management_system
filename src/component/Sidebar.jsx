@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaUsers, FaHospitalUser } from 'react-icons/fa';
 import { MdDashboard, MdOutlineHomeRepairService, MdOutlineTask } from "react-icons/md";
-import { FaMapLocationDot, FaUsersGear } from 'react-icons/fa6';
+import { FaMapLocationDot, FaRegBuilding, FaUsersGear } from 'react-icons/fa6';
 import { VscSignOut } from "react-icons/vsc";
 import { login } from '../Utils/ApiUsers';
 
@@ -14,11 +14,12 @@ const Sidebar = () => {
         // { path: '/dashboard', icon: <MdDashboard />, label: 'Dashboard' },
         { path: '/dashboard/user', icon: <MdDashboard />, label: 'Dashboard ' },
         { path: '/dashboard/service-orders', icon: <MdOutlineTask />, label: 'Service Orders' },
+        { path: '/dashboard/attendance', icon: <FaRegBuilding />, label: 'Attendance' },
         { path: '/dashboard/client', icon: <FaHospitalUser />, label: 'Client' },
         { path: '/dashboard/service-type', icon: <MdOutlineHomeRepairService />, label: 'Service Type' },
         { path: '/dashboard/locations', icon: <FaMapLocationDot />, label: 'Locations' },
         { path: '/dashboard/users', icon: <FaUsersGear />, label: 'Users' },
-        { path: '/dashboard/consultant', icon: <FaUsers />, label: 'Consultant' },
+        // { path: '/dashboard/consultant', icon: <FaUsers />, label: 'Consultant' },
     ];
 
     const handleLogout = async () => {
@@ -43,7 +44,7 @@ const Sidebar = () => {
                         <h1 className="mx-4 text-sm text-gray-500">{section}</h1>
                         <ul className="space-y-2 mt-2 px-3 text-sm">
                             {menuItems
-                                .slice(index * 2, index * 2 + 2)
+                                .slice(index * 3, index * 3 + 3)
                                 .map(({ path, icon, label }) => (
                                     <li key={path}>
                                         <Link

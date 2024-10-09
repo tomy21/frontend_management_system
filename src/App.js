@@ -12,6 +12,7 @@ import ServiceOrders from './pages/ServiceOrders'
 import Users from './pages/Users'
 import ProtectAuth from './pages/ProtectAuth'
 import DashboardUsers from './pages/DashboardUsers'
+import Attendance from './pages/Attendance'
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
           <Route path="locations" element={<Location />} />
           <Route path="service-type" element={<ServiceType />} />
           <Route path="user" element={<DashboardUsers />} />
+          <Route path="attendance" element={<Attendance />} />
         </Route>
       </Routes>
     </Router>

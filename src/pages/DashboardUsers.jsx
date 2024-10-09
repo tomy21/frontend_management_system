@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import CurrentTasks from '../component/UserComponent/CurrentTasks'
 import Activity from '../component/UserComponent/Activity'
-import { Attendance } from '../Utils/ApiUsers';
+import { AttendanceUsers } from '../Utils/ApiUsers';
 import { AiOutlineCheckCircle } from 'react-icons/ai';
 import Loading from '../component/Loading';
 import { serviceOrders } from '../Utils/apiManageClient';
@@ -42,7 +42,6 @@ export default function DashboardUsers() {
     const fetchOrderId = async () => {
         try {
             const response = await serviceOrders.getByConsultantId();
-            console.log(response);
             setListProject(response.data)
             setStatusDone(response.statusCount.done)
             setStatusPending(response.statusCount.pending)
@@ -53,9 +52,10 @@ export default function DashboardUsers() {
 
     const fetchAttedance = async () => {
         try {
-            const response = await Attendance.getAttendance();
-            setAttendanceTime(response[0].OutDate !== null ? response[0].OutDate : response[0].InDate);
-            setStatus(response[0].Status);
+            const response = await AttendanceUsers.getAttendance();
+            console.log(response.data[0].InDate)
+            setAttendanceTime(response.data[0].OutDate !== null ? response.data[0].OutDate : response.data[0].InDate);
+            setStatus(response.data[0].Status);
             setIdAttedance(response.Id);
         } catch (error) {
             console.error("Failed to fetch service Order:", error);
@@ -67,7 +67,7 @@ export default function DashboardUsers() {
         const currentDate = new Date().toISOString();
         console.log(currentDate)
         try {
-            const response = await Attendance.checkIn({
+            const response = await AttendanceUsers.checkIn({
                 Longitude: location.longitude,
                 Latitude: location.latitude,
                 InDate: currentDate,
@@ -92,7 +92,7 @@ export default function DashboardUsers() {
         const currentDate = new Date().toISOString();
         setLoading(true)
         try {
-            const response = await Attendance.checkOut(idAttedance);
+            const response = await AttendanceUsers.checkOut(idAttedance);
             setAttendanceTime(currentDate);
             setStatus(response.Status);
             setIdAttedance(response.Id);
