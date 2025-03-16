@@ -1,395 +1,294 @@
-import React from 'react'
-import { AiOutlineCloudDownload } from 'react-icons/ai'
-import { IoIosAddCircleOutline } from 'react-icons/io'
-import { LuFilter } from 'react-icons/lu'
-import { MdOutlineLocalPhone, MdOutlineMail } from 'react-icons/md'
+import React, { useState } from "react";
+import OrderModal from "../component/modal/OrderModal";
+import TitleHeaders from "../component/TitleHeaders";
+import { OrdersApi } from "../Utils/OrderApi";
+import { useOrderProvider } from "../Context/ServiceOrder";
+import { ScaleLoader } from "react-spinners";
+import AddButton from "../component/Button/AddButton";
+import SuccessNotifi from "../component/Notifikasi/SuccessNotifi";
+import Confirmation from "../component/modal/Confirmation";
+import Pagination from "../component/Pagination";
+import { BsTrash3 } from "react-icons/bs";
+import { MdOutlineLocalPhone, MdOutlineMail } from "react-icons/md";
+import { format } from "date-fns";
+import { BiSolidEditAlt } from "react-icons/bi";
+import ClientProvider from "../Context/ClientProvider";
+import ServiceTypeProvider from "../Context/ServiceTypeProvider";
+import { useNavigate } from "react-router-dom";
 
 export default function ServiceOrders() {
+  const {
+    dataOrder,
+    page,
+    limit,
+    totalPages,
+    totalItems,
+    setPage,
+    setLimit,
+    setSearch,
+    reloadDataOrder,
+  } = useOrderProvider();
+
+  console.log(dataOrder);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [openModalEdit, setOpenModalEdit] = useState(false);
+  const [openModalConfirmation, setOpenModalConfirmation] = useState(false);
+  const [idLocation, setIdLocation] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const openModal = () => setIsModalOpen(true); // Membuka modal
+  const closeModal = () => setIsModalOpen(false);
+  const openIsSuccess = () => setIsSuccess(true);
+  const closeIsSuccess = () => setIsSuccess(false);
+  const closeModalEdit = () => setOpenModalEdit(false);
+
+  const handleSuccessAdd = () => {
+    reloadDataOrder();
+    closeIsSuccess();
+    setIdLocation("");
+  };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setSearch(e.target.value);
+  };
+
+  const handleEdit = (id) => {
+    setIdLocation(id);
+    navigate(`/service-orders/detail-orders/${id}`);
+  };
+
+  const handleDelete = async (id) => {
+    setIdLocation(id);
+    setOpenModalConfirmation(true);
+  };
+
+  const actionDelete = async () => {
+    setIsLoading(true);
+    try {
+      const response = await OrdersApi.delete(idLocation);
+
+      if (response.status === "success") {
+        openIsSuccess(true);
+        reloadDataOrder();
+        setOpenModalConfirmation(false);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className='px-7 py-2'>
-      <h1 className="text-xl font-bold">Service Orders</h1>
-
-      <div className='flex flex-row justify-between items-center mt-3'>
-        <div className="flex flex-row w-[50%] justify-center items-center border border-slate-300 px-5 py-3 rounded-md">
-          <div className="flex flex-col w-full space-y-5">
-            <h1 className='text-sm font-medium'>Total Orders</h1>
-            <div className="flex justify-between items-center">
-              <div className="flex flex-col gap-y-2">
-                <h1 className='text-lg font-semibold'>30 <span className='text-xs font-medium text-slate-500'>Orders</span></h1>
-                <div className="flex flex-row justify-start items-center gap-x-2">
-                  <div className='w-2 h-2 bg-cyan-600 rounded-full'></div>
-                  <div className="text-xs text-success font-medium">Followup</div>
-                </div>
-              </div>
-              <div className="flex flex-col gap-y-2 border-l pl-7 border-slate-300">
-                <h1 className='text-lg font-semibold'>30 <span className='text-xs font-medium text-slate-500'>Orders</span></h1>
-                <div className="flex flex-row justify-start items-center gap-x-2">
-                  <div className='w-2 h-2 bg-amber-600 rounded-full'></div>
-                  <div className="text-xs text-success font-medium">On Progress</div>
-                </div>
-              </div>
-              <div className="flex flex-col gap-y-2 border-r border-l px-10 ">
-                <h1 className='text-lg font-semibold'>30 <span className='text-xs font-medium text-slate-500'>Orders</span></h1>
-                <div className="flex flex-row justify-start items-center gap-x-2">
-                  <div className='w-2 h-2 bg-red-600 rounded-full'></div>
-                  <div className="text-xs text-success font-medium">Reject</div>
-                </div>
-              </div>
-              <div className="flex flex-col gap-y-2">
-                <h1 className='text-lg font-semibold'>30 <span className='text-xs font-medium text-slate-500'>Orders</span></h1>
-                <div className="flex flex-row justify-start items-center gap-x-2">
-                  <div className='w-2 h-2 bg-success rounded-full'></div>
-                  <div className="text-xs text-success font-medium">Done</div>
-                </div>
-              </div>
-            </div>
-            <div className="text-xs text-sky-500">Last update <span className='font-semibold '>23 may 2024 18:00</span></div>
+    <>
+      {isLoading && (
+        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="flex items-center justify-center mb-3 z-30">
+            <ScaleLoader size={250} color={"#ffff"} loading={true} />
           </div>
         </div>
-
-        <div className="flex flex-row w-[22%] justify-between items-center border border-slate-300 px-5 py-3 rounded-md">
-          <div className="flex flex-col w-full space-y-5">
-            <h1 className='text-sm font-medium'>Total Client</h1>
-            <div className="flex justify-between items-center">
-              <div className="flex justify-between items-center w-full">
-                <h1 className='text-2xl font-semibold'>30</h1>
-                <div className="flex flex-row justify-start items-center gap-x-2">
-                  <div className='w-2 h-2 bg-success rounded-full'></div>
-                  <div className="text-xs text-success font-medium">Accepted</div>
-                </div>
-              </div>
-
-            </div>
-            <div className="text-xs text-sky-500">Last update <span className='font-semibold '>23 may 2024 18:00</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-between items-center mt-10">
-        <input type="search" name="search" id="search" className='border border-slate-300 rounded-md px-2 py-3 text-xs w-72' placeholder='Search' />
+      )}
+      <TitleHeaders
+        title={"Service Order"}
+        subtitle={"Manage your order here"}
+      />
+      <div className="flex justify-between items-center">
+        <input
+          type="search"
+          name="search"
+          id="search"
+          className="border border-slate-300 rounded-md px-2 py-3 text-xs w-72"
+          placeholder="Search"
+          value={searchTerm}
+          onChange={handleSearch}
+        />
 
         <div className="flex flex-row space-x-3 justify-center items-center">
-          <button className='flex flex-row space-x-2 text-sm text-sky-500 border-slate-400 justify-center items-center'>
-            <IoIosAddCircleOutline />
-            <p>Add Order</p>
-          </button>
-          <button className='flex flex-row space-x-2 text-sm text-emerald-500 px-5 border-r border-slate-400 justify-center items-center'>
-            <AiOutlineCloudDownload />
-            <p>Export</p>
-          </button>
-          <button className='flex flex-row space-x-2 text-sm text-emerald-500 border-slate-400 justify-center items-center'>
-            <LuFilter />
-            <p>Filter</p>
-          </button>
+          <AddButton title={"Add Order"} onClick={openModal} />
         </div>
       </div>
 
-      <div className="overflow-x-auto max-h-[56vh] w-full mt-3 ">
-        <table className='table table-zebra table-xs table-pin-rows table-pin-cols text-xs cursor-pointer'>
-          <thead className='border border-slate-200'>
+      <div className="overflow-x-auto max-h-[56vh] w-full mt-2 ">
+        <table className="table table-zebra table-xs table-pin-rows table-pin-cols text-xs cursor-pointer">
+          <thead className="">
             <tr>
-              <th className='p-3 border-r border-b border-slate-200 w-[5%]'>#</th>
-              <th className='p-3 border-r border-b border-slate-200 w-[20%]'>Code Orders</th>
-              <th className='p-3 border-r border-b border-slate-200 w-[20%]'>Contact</th>
-              <th className='p-3 border-r border-b border-slate-200 w-[15%]'>Client</th>
-              <th className='p-3 border-r border-b border-slate-200 w-[10%]'>Status</th>
-              <th className='p-3 border-b border-slate-200 w-[15%]'>Estimate Value</th>
+              <th className="p-3 border border-b border-slate-200 bg-slate-200">
+                #
+              </th>
+              <th className="p-3 border border-b border-slate-200 bg-slate-200">
+                Create Date
+              </th>
+              <th className="p-3 border border-b border-slate-200 bg-slate-200">
+                Order Code
+              </th>
+              <th className="p-3 border border-b border-slate-200 bg-slate-200">
+                Client Info
+              </th>
+              <th className="p-3 border border-b border-slate-200 bg-slate-200">
+                Address
+              </th>
+              <th className="p-3 border border-b border-slate-200 bg-slate-200">
+                Class
+              </th>
+              <th className="p-3 border border-b border-slate-200 bg-slate-200">
+                Consultant
+              </th>
+              <th className="p-3 border border-b border-slate-200 bg-slate-200">
+                Status
+              </th>
+              <th className="p-3 border border-b border-slate-200 bg-slate-200">
+                Action
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td className='py-3 px-3'>1</td>
-              <td className='py-3 px-3'>ST/CM/MM/00001/MS/MC</td>
-              <td className='py-3 px-3'>
-                <div className='flex flex-col'>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineMail className='text-slate-400' />
-                    <p className='text-slate-700'>client@email.com</p>
-                  </div>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineLocalPhone className='text-slate-400' />
-                    <p className='text-slate-400'>+62 812-9222-1111</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className="flex flex-row gap-x-2 justify-start items-center">
-                  <div className="w-7 h-7 rounded-full bg-black"></div>
-                  <div className='flex flex-col'>
-                    <p className='text-slate-700'>Nama Client</p>
-                    <p className='text-slate-400'>webiste client</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className='bg-cyan-100 text-cyan-600 p-1 text-center rounded-full'>Follow up</div>
-              </td>
-              <td className='py-3 px-3'>IDR 3 mio</td>
-            </tr>
-            <tr>
-              <td className='py-3 px-3'>2</td>
-              <td className='py-3 px-3'>ST/CM/MM/00002/MS/MC</td>
-              <td className='py-3 px-3'>
-                <div className='flex flex-col'>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineMail className='text-slate-400' />
-                    <p className='text-slate-700'>client@email.com</p>
-                  </div>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineLocalPhone className='text-slate-400' />
-                    <p className='text-slate-400'>+62 812-9222-1111</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className="flex flex-row gap-x-2 justify-start items-center">
-                  <div className="w-7 h-7 rounded-full bg-black"></div>
-                  <div className='flex flex-col'>
-                    <p className='text-slate-700'>Nama Client</p>
-                    <p className='text-slate-400'>webiste client</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className='bg-amber-100 text-amber-600 p-1 text-center rounded-full'>Pending</div>
-              </td>
-              <td className='py-3 px-3'>IDR 3 mio</td>
-            </tr>
-            <tr>
-              <td className='py-3 px-3'>3</td>
-              <td className='py-3 px-3'>ST/CM/MM/00003/MS/MC</td>
-              <td className='py-3 px-3'>
-                <div className='flex flex-col'>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineMail className='text-slate-400' />
-                    <p className='text-slate-700'>client@email.com</p>
-                  </div>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineLocalPhone className='text-slate-400' />
-                    <p className='text-slate-400'>+62 812-9222-1111</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className="flex flex-row gap-x-2 justify-start items-center">
-                  <div className="w-7 h-7 rounded-full bg-black"></div>
-                  <div className='flex flex-col'>
-                    <p className='text-slate-700'>Nama Client</p>
-                    <p className='text-slate-400'>webiste client</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className='bg-purple-100 text-purple-600 p-1 text-center rounded-full'>Accepted</div>
-              </td>
-              <td className='py-3 px-3'>IDR 3 mio</td>
-            </tr>
-            <tr>
-              <td className='py-3 px-3'>4</td>
-              <td className='py-3 px-3'>ST/CM/MM/00004/MS/MC</td>
-              <td className='py-3 px-3'>
-                <div className='flex flex-col'>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineMail className='text-slate-400' />
-                    <p className='text-slate-700'>client@email.com</p>
-                  </div>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineLocalPhone className='text-slate-400' />
-                    <p className='text-slate-400'>+62 812-9222-1111</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className="flex flex-row gap-x-2 justify-start items-center">
-                  <div className="w-7 h-7 rounded-full bg-black"></div>
-                  <div className='flex flex-col'>
-                    <p className='text-slate-700'>Nama Client</p>
-                    <p className='text-slate-400'>webiste client</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className='bg-slate-300 text-slate-600 p-1 text-center rounded-full'>On Progress</div>
-              </td>
-              <td className='py-3 px-3'>IDR 3 mio</td>
-            </tr>
-            <tr>
-              <td className='py-3 px-3'>5</td>
-              <td className='py-3 px-3'>ST/CM/MM/00005/MS/MC</td>
-              <td className='py-3 px-3'>
-                <div className='flex flex-col'>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineMail className='text-slate-400' />
-                    <p className='text-slate-700'>client@email.com</p>
-                  </div>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineLocalPhone className='text-slate-400' />
-                    <p className='text-slate-400'>+62 812-9222-1111</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className="flex flex-row gap-x-2 justify-start items-center">
-                  <div className="w-7 h-7 rounded-full bg-black"></div>
-                  <div className='flex flex-col'>
-                    <p className='text-slate-700'>Nama Client</p>
-                    <p className='text-slate-400'>webiste client</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className='bg-red-100 text-red-600 p-1 text-center rounded-full'>Reject</div>
-              </td>
-              <td className='py-3 px-3'>IDR 3 mio</td>
-            </tr>
-            <tr>
-              <td className='py-3 px-3'>6</td>
-              <td className='py-3 px-3'>ST/CM/MM/00006/MS/MC</td>
-              <td className='py-3 px-3'>
-                <div className='flex flex-col'>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineMail className='text-slate-400' />
-                    <p className='text-slate-700'>client@email.com</p>
-                  </div>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineLocalPhone className='text-slate-400' />
-                    <p className='text-slate-400'>+62 812-9222-1111</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className="flex flex-row gap-x-2 justify-start items-center">
-                  <div className="w-7 h-7 rounded-full bg-black"></div>
-                  <div className='flex flex-col'>
-                    <p className='text-slate-700'>Nama Client</p>
-                    <p className='text-slate-400'>webiste client</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className='bg-emerald-100 text-emerald-600 p-1 text-center rounded-full'>Done</div>
-              </td>
-              <td className='py-3 px-3'>IDR 3 mio</td>
-            </tr>
-            <tr>
-              <td className='py-3 px-3'>7</td>
-              <td className='py-3 px-3'>ST/CM/MM/00001/MS/MC</td>
-              <td className='py-3 px-3'>
-                <div className='flex flex-col'>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineMail className='text-slate-400' />
-                    <p className='text-slate-700'>client@email.com</p>
-                  </div>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineLocalPhone className='text-slate-400' />
-                    <p className='text-slate-400'>+62 812-9222-1111</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className="flex flex-row gap-x-2 justify-start items-center">
-                  <div className="w-7 h-7 rounded-full bg-black"></div>
-                  <div className='flex flex-col'>
-                    <p className='text-slate-700'>Nama Client</p>
-                    <p className='text-slate-400'>webiste client</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className='bg-cyan-100 text-cyan-600 p-1 text-center rounded-full'>Follow up</div>
-              </td>
-              <td className='py-3 px-3'>IDR 3 mio</td>
-            </tr>
-            <tr>
-              <td className='py-3 px-3'>8</td>
-              <td className='py-3 px-3'>ST/CM/MM/00001/MS/MC</td>
-              <td className='py-3 px-3'>
-                <div className='flex flex-col'>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineMail className='text-slate-400' />
-                    <p className='text-slate-700'>client@email.com</p>
-                  </div>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineLocalPhone className='text-slate-400' />
-                    <p className='text-slate-400'>+62 812-9222-1111</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className="flex flex-row gap-x-2 justify-start items-center">
-                  <div className="w-7 h-7 rounded-full bg-black"></div>
-                  <div className='flex flex-col'>
-                    <p className='text-slate-700'>Nama Client</p>
-                    <p className='text-slate-400'>webiste client</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className='bg-cyan-100 text-cyan-600 p-1 text-center rounded-full'>Follow up</div>
-              </td>
-              <td className='py-3 px-3'>IDR 3 mio</td>
-            </tr>
-            <tr>
-              <td className='py-3 px-3'>9</td>
-              <td className='py-3 px-3'>ST/CM/MM/00001/MS/MC</td>
-              <td className='py-3 px-3'>
-                <div className='flex flex-col'>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineMail className='text-slate-400' />
-                    <p className='text-slate-700'>client@email.com</p>
-                  </div>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineLocalPhone className='text-slate-400' />
-                    <p className='text-slate-400'>+62 812-9222-1111</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className="flex flex-row gap-x-2 justify-start items-center">
-                  <div className="w-7 h-7 rounded-full bg-black"></div>
-                  <div className='flex flex-col'>
-                    <p className='text-slate-700'>Nama Client</p>
-                    <p className='text-slate-400'>webiste client</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className='bg-cyan-100 text-cyan-600 p-1 text-center rounded-full'>Follow up</div>
-              </td>
-              <td className='py-3 px-3'>IDR 3 mio</td>
-            </tr>
-            <tr>
-              <td className='py-3 px-3'>10</td>
-              <td className='py-3 px-3'>ST/CM/MM/00001/MS/MC</td>
-              <td className='py-3 px-3'>
-                <div className='flex flex-col'>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineMail className='text-slate-400' />
-                    <p className='text-slate-700'>client@email.com</p>
-                  </div>
-                  <div className="flex flex-row justify-start items-center gap-x-2">
-                    <MdOutlineLocalPhone className='text-slate-400' />
-                    <p className='text-slate-400'>+62 812-9222-1111</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className="flex flex-row gap-x-2 justify-start items-center">
-                  <div className="w-7 h-7 rounded-full bg-black"></div>
-                  <div className='flex flex-col'>
-                    <p className='text-slate-700'>Nama Client</p>
-                    <p className='text-slate-400'>webiste client</p>
-                  </div>
-                </div>
-              </td>
-              <td className='py-3 px-3'>
-                <div className='bg-cyan-100 text-cyan-600 p-1 text-center rounded-full'>Follow up</div>
-              </td>
-              <td className='py-3 px-3'>IDR 3 mio</td>
-            </tr>
+            {dataOrder.length > 0 ? (
+              dataOrder.map((item, index) => (
+                <tr key={index}>
+                  <td className="py-3 px-3">{index + 1}</td>
+                  <td className="py-3 px-3">
+                    {format(new Date(item.CreatedAt), "dd MMM yy HH:mm")}
+                  </td>
+                  <td className="py-3 px-3">{item.OrderId}</td>
+                  <td className="py-3 px-3">
+                    <div className="flex flex-col">
+                      <div className="flex flex-row justify-start items-center gap-x-2">
+                        <MdOutlineMail className="text-slate-400" />
+                        <p className="text-slate-700">{item.Client.Email}</p>
+                      </div>
+                      <div className="flex flex-row justify-start items-center gap-x-2">
+                        <MdOutlineLocalPhone className="text-slate-400" />
+                        <p className="text-slate-400">
+                          {item.Client.PhoneNumber}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-3 px-3">
+                    <a
+                      href={item.ShareUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline"
+                    >
+                      {item.Address}
+                    </a>
+                  </td>
+                  <td className="py-3 px-3">
+                    <div className="flex flex-row justify-center items-center gap-x-2 bg-yellow-400 py-1 px-3 rounded-md">
+                      <p className="text-slate-400">{item.ClassMode}</p>
+                    </div>
+                  </td>
+
+                  <td className="py-3 px-3 text-black">
+                    <div className="flex items-center -space-x-2">
+                      {item.Consultants?.slice(0, 5).map((data, index) => {
+                        const initials = data.UserName.split(" ")
+                          .map((word) => word[0])
+                          .join("")
+                          .toUpperCase();
+
+                        return (
+                          <div
+                            key={index}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-300 text-black font-bold rounded-full border-2 border-white text-sm"
+                          >
+                            {initials}
+                          </div>
+                        );
+                      })}
+                      {item.Consultants?.length > 5 && (
+                        <div className="w-8 h-8 flex items-center justify-center bg-blue-500 text-white font-bold rounded-full border-2 border-white text-sm">
+                          +{item.Consultants.length - 5}
+                        </div>
+                      )}
+                    </div>
+                  </td>
+
+                  <td className="py-3 px-3">
+                    <div className="flex flex-row gap-x-2 justify-start items-center">
+                      <div
+                        className={`w-2 h-2 rounded-full ${
+                          item.Status === "Created" ? "bg-success" : "bg-danger"
+                        }`}
+                      ></div>
+                      <div className="text-xs text-success font-medium">
+                        {item.Status}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-3 px-3">
+                    <div className="flex flex-row gap-x-5 justify-center items-center">
+                      <BiSolidEditAlt
+                        onClick={() => handleEdit(item.Id)}
+                        className="text-lg hover:text-cyan-500"
+                      />
+                      <BsTrash3
+                        onClick={() => handleDelete(item.Id)}
+                        className="text-lg hover:text-red-500"
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="py-3 px-3 text-center">
+                  No data available
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
-    </div>
-  )
+      <div className="w-full">
+        <Pagination
+          currentPage={page} // set current page properly
+          totalPages={totalPages} // adjust based on the length of data
+          setPageCurrent={setPage}
+          totalItem={totalItems}
+          limit={limit}
+          setLimitData={setLimit}
+        />
+      </div>
+
+      {isModalOpen && (
+        <ClientProvider>
+          <ServiceTypeProvider>
+            <OrderModal
+              isOpen={isModalOpen}
+              onClose={closeModal}
+              isSuccess={openIsSuccess}
+            />
+          </ServiceTypeProvider>
+        </ClientProvider>
+      )}
+
+      {isSuccess && (
+        <SuccessNotifi isOpen={isSuccess} onClose={handleSuccessAdd} />
+      )}
+
+      {/* {openModalEdit && (
+        <EditLocation
+          isOpen={openModalEdit}
+          onClose={closeModalEdit}
+          isSuccess={openIsSuccess}
+          id={idLocation}
+        />
+      )} */}
+
+      {openModalConfirmation && (
+        <Confirmation
+          isOpen={openModalConfirmation}
+          onClose={() => setOpenModalConfirmation(false)}
+          submit={actionDelete}
+        />
+      )}
+    </>
+  );
 }
