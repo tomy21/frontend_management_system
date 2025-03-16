@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { jwtDecode } from "jwt-decode";
-import Cookies from "js-cookie";
-import { getUserById } from '../../Utils/ApiUsers';
+import { clientData } from '../../Utils/apiManageClient';
+import Loading from '../Loading';
 
 export default function ClientModal({ isOpen, onClose, onSave, client }) {
     const initialFormData = client || {
-        name: '',
-        email: '',
-        contact_person: '',
-        contact_title: '',
-        contact_phone: '',
-        longitude: '',
-        latitude: '',
-        status: 1,
-        updatedBy: '',
-        createdBy: '',
+        CompanyName: '',
+        Initial: '',
+        Email: '',
+        PhoneNumber: '',
+        Latitude: '',
+        Longitude: '',
+        IsActive: true,
+        AddressUrl: '',
+        Address: '', // Menambahkan ini
     };
 
     const [formData, setFormData] = useState(initialFormData);
@@ -22,153 +20,191 @@ export default function ClientModal({ isOpen, onClose, onSave, client }) {
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
     const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-    const [idUsers, setIdUsers] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
     useEffect(() => {
-        const token = Cookies.get('refreshToken');
-        if (token) {
-            const decodedToken = jwtDecode(token);
-            const nameFromToken = decodedToken.name;
-            
-            const response = getUserById.getById(decodedToken.Id);
-            console.log("data",response);
-            // const name = response.data.user.name;
-            // if (client) {
-            //     setFormData(prevFormData => ({
-            //         ...prevFormData,
-            //         ...client,
-            //         updatedBy: name,
-            //     }));
-            // } else {
-            //     console.log(response);
-            //     setFormData(prevFormData => ({
-            //         ...prevFormData,
-            //         createdBy: name, // Tetapkan createdBy dari token saat menambahkan data
-            //     }));
-            // }
+        if (client) {
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                ...client,
+            }));
         }
     }, [client]);
 
-    const resetForm = () => {
-        setFormData(initialFormData);
-    };
-
-    const handleStatusChange = () => {
-        setFormData(prevFormData => {
-            const newStatus = prevFormData.status === 1 ? 2 : 1;
-            return {
-                ...prevFormData,
-                status: newStatus,
-            };
-        });
-    };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-    };
-
-    const handleSubmit = async () => {
-        setLoading(true);
-        console.log(formData);
+    const parseGoogleMapsUrl = (url) => {
         try {
-            if (client) {
-                await onSave(formData);
-                resetForm(); // reset form after successful save
-                setIsSuccessModalOpen(true);
-            } else {
-                const response = await onSave(formData);
-                if (response.statusCode === 200) {
-                    resetForm(); // reset form after successful save
-                    setIsSuccessModalOpen(true);
-                } else {
-                    setErrorMessage(response.message); // Simpan pesan error
-                    setIsErrorModalOpen(true); // Tampilkan modal error
+            const atIndex = url.indexOf('@');
+            if (atIndex !== -1) {
+                const subStr = url.substring(atIndex + 1);
+                const parts = subStr.split(/[ ,\/]/);
+                if (parts.length >= 2) {
+                    const Latitude = parts[0];
+                    const Longitude = parts[1];
+                    return { Latitude, Longitude };
                 }
             }
+            // Alternatif untuk format URL yang berbeda
+            const latMatch = url.match(/!3d([-0-9.]+)/);
+            const lngMatch = url.match(/!4d([-0-9.]+)/);
+            if (latMatch && lngMatch) {
+                const Latitude = latMatch[1];
+                const Longitude = lngMatch[1];
+                return { Latitude, Longitude };
+            }
         } catch (error) {
-            // Jika error tidak sesuai format atau dari catch block
-            setErrorMessage(error.message || 'Something went wrong'); // Simpan pesan error
-            setIsErrorModalOpen(true); // Tampilkan modal error
-        } finally {
-            setLoading(false);
+            console.error('Error parsing Google Maps URL:', error);
         }
+        return { Latitude: '', Longitude: '' };
     };
-
-    const closeModal = () => {
-        resetForm();
-        onClose();
-    };
-
-    if (!isOpen && !isSuccessModalOpen) return null;
 
     const getInitials = (name) => {
         return name
             .split(' ')
             .map((word) => word[0])
-            .join('');
+            .join('')
+            .substring(0, 2)
+            .toUpperCase();
     };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+
+        if (name === 'AddressUrl') {
+            const { Latitude, Longitude } = parseGoogleMapsUrl(value);
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                [name]: value,
+                Latitude: Latitude,
+                Longitude: Longitude,
+            }));
+        } else if (name === 'CompanyName') {
+            const initials = getInitials(value);
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                [name]: value,
+                Initial: initials,
+            }));
+        } else {
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                [name]: value,
+            }));
+        }
+    };
+
+    const handleSubmit = async () => {
+        setLoading(true);
+        try {
+            let response;
+            if (!client) {
+                response = await clientData.create(formData);
+                setSuccessMessage(response.message);
+            } else {
+                response = await clientData.updateClient(client.Id, formData);
+                setSuccessMessage(response.message);
+            }
+
+            if (response && response.success === true) {
+                // Tampilkan pesan sukses atau lakukan tindakan lain
+                setIsSuccessModalOpen(true);
+
+                // Menunda eksekusi onSave dan onClose selama 2 detik (2000 ms)
+                setTimeout(async () => {
+                    await onSave();
+                    onClose(); // Tutup modal setelah berhasil
+                }, 2000);
+            } else {
+                setErrorMessage(response.message || 'An error occurred');
+            }
+        } catch (error) {
+            setErrorMessage(error.message || 'Something went wrong');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+    const closeModal = () => {
+        setFormData(initialFormData === "");
+        onClose();
+    };
+
+    if (!isOpen && !isSuccessModalOpen) return null;
 
     const closeSuccessModal = () => {
         setIsSuccessModalOpen(false);
         closeModal();
     };
 
+    if (loading) {
+        return <Loading />
+    }
+
     return (
         <div>
             {/* Main Modal */}
             <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
                 <div className="bg-white p-6 rounded-lg shadow-lg w-[500px]">
-                    <div className="flex items-center mb-4">
-                        {client?.image ? (
-                            <img
-                                src={client.image}
-                                alt={client.name}
-                                className="w-16 h-16 rounded-full"
-                            />
+                    <div className="mb-4">
+                        {client ? (
+                            <div className="flex items-center">
+                                {client.image ? (
+                                    <img
+                                        src={client.image}
+                                        alt={client.CompanyName}
+                                        className="w-16 h-16 rounded-full"
+                                    />
+                                ) : (
+                                    <div className="w-16 h-16 rounded-full bg-gray-500 flex items-center justify-center text-white text-2xl">
+                                        {getInitials(client.CompanyName)}
+                                    </div>
+                                )}
+                                <div className="ml-4">
+                                    <h2 className="text-xl font-semibold mb-1">{client.CompanyName}</h2>
+                                    <p className="text-gray-500">{client.code}</p>
+                                </div>
+                            </div>
                         ) : (
-                            <div className="w-16 h-16 rounded-full bg-gray-500 flex items-center justify-center text-white text-2xl">
-                                {getInitials(client?.name || formData.name)}
+                            <div>
+                                <h2 className="text-xl font-semibold mb-1">Add Client</h2>
                             </div>
                         )}
-                        <div className="ml-4">
-                            <h2 className="text-xl font-semibold mb-1">{client ? client.name : 'Add Client'}</h2>
-                            <p className="text-gray-500">{client ? client.code : ''}</p>
-                        </div>
                     </div>
                     <div className="space-y-4">
                         {/* Fields */}
                         <div className="flex justify-between gap-2">
                             <div className="w-full">
-                                <label className="block text-sm font-medium text-gray-700">Name Client</label>
+                                <label className="block text-sm font-medium text-gray-700">Company Name</label>
                                 <input
                                     type="text"
-                                    name="name"
-                                    value={formData.name}
+                                    name="CompanyName"
+                                    value={formData.CompanyName}
                                     onChange={handleChange}
                                     className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                                    required
                                 />
                             </div>
                             <div className="w-full">
-                                <label className="block text-sm font-medium text-gray-700">Contact Person</label>
+                                <label className="block text-sm font-medium text-gray-700">Initial</label>
                                 <input
                                     type="text"
-                                    name="contact_person"
-                                    value={formData.contact_person}
+                                    name="Initial"
+                                    value={formData.Initial}
                                     onChange={handleChange}
-                                    className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                                    className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full bg-gray-100"
+                                    required
+                                    readOnly
                                 />
                             </div>
                         </div>
                         {/* More Fields */}
-                        {/* Add more input fields similar to the above */}
                         <div className="flex justify-between gap-2">
                             <div className="w-full">
                                 <label className="block text-sm font-medium text-gray-700">Email Address</label>
                                 <input
                                     type="email"
-                                    name="email"
-                                    value={formData.email}
+                                    name="Email"
+                                    value={formData.Email}
                                     onChange={handleChange}
                                     className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
                                 />
@@ -177,67 +213,62 @@ export default function ClientModal({ isOpen, onClose, onSave, client }) {
                                 <label className="block text-sm font-medium text-gray-700">Phone Number</label>
                                 <input
                                     type="text"
-                                    name="contact_phone"
-                                    value={formData.contact_phone}
+                                    name="PhoneNumber"
+                                    value={formData.PhoneNumber}
                                     onChange={handleChange}
                                     className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
                                 />
                             </div>
                         </div>
-
+                        {/* Address Field */}
+                        <div className="w-full">
+                            <label className="block text-sm font-medium text-gray-700">Address</label>
+                            <textarea
+                                name="Address"
+                                value={formData.Address}
+                                onChange={handleChange}
+                                className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                                rows="3"
+                            ></textarea>
+                        </div>
+                        {/* Address URL Field */}
+                        <div className="w-full">
+                            <label className="block text-sm font-medium text-gray-700">Address URL</label>
+                            <input
+                                type="text"
+                                name="AddressUrl"
+                                value={formData.AddressUrl}
+                                onChange={handleChange}
+                                className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                            />
+                            <p className="text-sm text-gray-500 mt-1">
+                                Masukkan URL Google Maps, longitude dan latitude akan terisi otomatis.
+                            </p>
+                        </div>
+                        {/* Longitude and Latitude Fields */}
                         <div className="flex justify-between gap-2">
                             <div className="w-full">
                                 <label className="block text-sm font-medium text-gray-700">Longitude</label>
                                 <input
                                     type="text"
-                                    name="longitude"
-                                    value={formData.longitude}
+                                    name="Longitude"
+                                    value={formData.Longitude}
                                     onChange={handleChange}
-                                    className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                                    className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full bg-gray-100"
+                                    readOnly
                                 />
                             </div>
                             <div className="w-full">
                                 <label className="block text-sm font-medium text-gray-700">Latitude</label>
                                 <input
                                     type="text"
-                                    name="latitude"
-                                    value={formData.latitude}
+                                    name="Latitude"
+                                    value={formData.Latitude}
                                     onChange={handleChange}
-                                    className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                                    className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full bg-gray-100"
+                                    readOnly
                                 />
                             </div>
-                        </div>
-
-                        {/* Status Toggle */}
-                        <div className="flex justify-between gap-2">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Status</label>
-                                <div
-                                    onClick={handleStatusChange}
-                                    className={`w-20 h-8 flex items-center bg-gray-300 rounded-full p-1 cursor-pointer ${formData.status === 1 ? 'justify-start' : 'justify-end'
-                                        }`}
-                                >
-                                    <div
-                                        className={`w-6 h-6 rounded-full ${formData.status === 1 ? 'bg-green-500' : 'bg-red-500'
-                                            }`}
-                                    ></div>
-                                </div>
-                                <span className="text-sm text-gray-600 mt-1 block">
-                                    {formData.status === 1 ? 'Aktif' : 'Nonaktif'}
-                                </span>
-                            </div>
-                            {client ? "" : (
-                                <div className="w-1/2">
-                                    <label className="block text-sm font-medium text-gray-700">Contact title</label>
-                                    <input
-                                        type="text"
-                                        name="contact_title"
-                                        value={formData.contact_title}
-                                        onChange={handleChange}
-                                        className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                                    />
-                                </div>
-                            )}
                         </div>
                     </div>
 
@@ -263,7 +294,7 @@ export default function ClientModal({ isOpen, onClose, onSave, client }) {
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-[400px]">
                         <h2 className="text-xl font-semibold mb-4">Berhasil!</h2>
-                        <p className="text-gray-700 mb-4">Data berhasil disimpan.</p>
+                        <p className="text-gray-700 mb-4">{successMessage}</p>
                         <button
                             onClick={closeSuccessModal}
                             className="px-4 py-2 bg-blue-500 text-white rounded-md w-full"
