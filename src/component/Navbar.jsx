@@ -20,19 +20,19 @@ export default function Navbar() {
     setDropdownOpen(!dropdownOpen);
   };
 
-  // useEffect(() => {
-  //     const fetchToken = async () => {
-  //         const token = Cookies.get("refreshToken");
-  //         if (!token) {
-  //             navigate("/");
-  //         }
-  //         if (token) {
-  //             const decodedToken = jwtDecode(token);
-  //             setIdUser(decodedToken.Id);
-  //         }
-  //     };
-  //     fetchToken();
-  // }, [navigate]);
+  useEffect(() => {
+    const fetchToken = async () => {
+      const token = Cookies.get("refreshToken");
+      if (!token) {
+        navigate("/");
+      }
+      if (token) {
+        const decodedToken = jwtDecode(token);
+        setIdUser(decodedToken.Id);
+      }
+    };
+    fetchToken();
+  }, [navigate]);
 
   useEffect(() => {
     const fetchUser = async () => {
